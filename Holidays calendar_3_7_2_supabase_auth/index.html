@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Holidays calendar v3.7.0 • Supabase</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script type="module" src="https://esm.sh/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Holidays calendar</div>
+    <div class="left-controls">
+      <button id="langToggle" aria-label="Toggle language">AR / EN</button>
+      <div id="userBadge" class="badge" hidden></div>
+      <button id="btnSignOut" class="danger" hidden data-i18n="sign_out">تسجيل الخروج</button>
+    </div>
+  </header>
+
+  <nav class="navbar">
+    <button data-view="overview" data-i18n="nav_overview">نظرة عامة</button>
+    <button data-view="employees" data-i18n="nav_employees">مكتبة الموظفين</button>
+    <button data-view="holidays" data-i18n="nav_holidays">الإجازات</button>
+    <button data-view="reports" data-i18n="nav_reports">التقارير</button>
+    <button data-view="activity" data-i18n="nav_activity">النشاط</button>
+    <button data-view="about" data-i18n="nav_about">عن التطبيق</button>
+  </nav>
+
+  <!-- AUTH -->
+  <main id="view-auth" class="view active">
+    <h1 data-i18n="auth_title">تسجيل الدخول</h1>
+    <section class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="signin" data-i18n="tab_signin">دخول</button>
+        <button class="tab" data-tab="signup" data-i18n="tab_signup">حساب جديد</button>
+      </div>
+      <div id="tab-signin">
+        <div class="form-grid">
+          <label><span data-i18n="label_email">البريد الإلكتروني</span> <input id="siEmail" type="email" autocomplete="username"></label>
+          <label><span data-i18n="label_password">كلمة المرور</span> <input id="siPass" type="password" autocomplete="current-password"></label>
+        </div>
+        <button id="btnSignIn" data-i18n="btn_signin">دخول</button>
+      </div>
+      <div id="tab-signup" hidden>
+        <div class="form-grid">
+          <label><span data-i18n="label_username">اسم المستخدم (Username)</span> <input id="suUser" placeholder="مثال: ethar_al"></label>
+          <label><span data-i18n="label_email">البريد الإلكتروني</span> <input id="suEmail" type="email" autocomplete="username"></label>
+          <label><span data-i18n="label_password">كلمة المرور</span> <input id="suPass" type="password" autocomplete="new-password"></label>
+        </div>
+        <button id="btnSignUp" data-i18n="btn_signup">إنشاء حساب</button>
+      </div>
+      <p class="small" data-i18n="auth_hint">لأمان البيانات ومتابعة التعديلات لكل مستخدم.</p>
+    </section>
+  </main>
+
+  <!-- APP VIEWS -->
+  <main id="view-overview" class="view">
+    <h1 data-i18n="overview_title">نظرة عامة</h1>
+    <section class="card">
+      <div class="filters">
+        <label><span data-i18n="label_year">السنة</span> <input type="number" id="ovYear" min="2000" max="2100"></label>
+        <button id="refreshOverview" data-i18n="btn_refresh">تحديث</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3 data-i18n="h3_month_details">حسب الشهر (تفاصيل)</h3>
+          <table id="tblMonthlyDetails">
+            <thead><tr>
+              <th data-i18n="th_emp_name">اسم الموظف</th>
+              <th data-i18n="th_start_g">بداية (ميلادي)</th>
+              <th data-i18n="th_end_g">نهاية (ميلادي)</th>
+              <th data-i18n="th_days">أيام</th>
+              <th data-i18n="th_type">نوع</th>
+              <th data-i18n="th_reason">سبب</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div>
+          <h3 data-i18n="h3_year_details">حسب السنة (تفاصيل + إجمالي)</h3>
+          <table id="tblYearlyDetails">
+            <thead><tr>
+              <th data-i18n="th_emp_name">اسم الموظف</th>
+              <th data-i18n="th_start_g">بداية (ميلادي)</th>
+              <th data-i18n="th_end_g">نهاية (ميلادي)</th>
+              <th data-i18n="th_days">أيام</th>
+              <th data-i18n="th_type">نوع</th>
+              <th data-i18n="th_reason">سبب</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+          <h4 data-i18n="h4_year_totals">إجمالي السنة لكل موظف</h4>
+          <table id="tblYearlyTotals">
+            <thead><tr>
+              <th data-i18n="th_emp_name">اسم الموظف</th>
+              <th data-i18n="th_total_days">إجمالي الأيام</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main id="view-employees" class="view">
+    <h1 data-i18n="employees_title">مكتبة الموظفين</h1>
+    <section class="card">
+      <div class="toolbar">
+        <input type="text" id="empSearch" data-i18n-ph="ph_search_emp" placeholder="ابحث بالاسم أو الرقم الوظيفي">
+        <div class="spacer"></div>
+        <button id="btnAddEmp" data-i18n="btn_add_emp">إضافة موظف</button>
+      </div>
+      <table id="tblEmployees">
+        <thead><tr>
+          <th data-i18n="th_code">الرقم الوظيفي</th>
+          <th data-i18n="th_emp_name">اسم الموظف</th>
+          <th data-i18n="th_city">المدينة</th>
+          <th data-i18n="th_dept">القسم</th>
+          <th data-i18n="th_updated_by">آخر تعديل بواسطة</th>
+          <th data-i18n="th_actions">إجراءات</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <main id="view-holidays" class="view">
+    <h1 data-i18n="holidays_title">الإجازات</h1>
+    <section class="card">
+      <div class="toolbar ac-wrap">
+        <label class="full"><span data-i18n="label_emp_search">الموظف (بحث)</span>
+          <input id="holEmpSearch" type="text" data-i18n-ph="ph_search_emp" placeholder="ابحث بالاسم أو الرقم الوظيفي">
+          <div id="holEmpList" class="ac-panel"></div>
+        </label>
+        <button id="btnClearHolEmp" data-i18n="btn_clear">مسح</button>
+        <div id="holSelectedCard" class="emp-chip" hidden></div>
+        <div class="spacer"></div>
+        <button id="btnAddHol" disabled data-i18n="btn_add_hol">إضافة إجازة</button>
+      </div>
+      <table id="tblHolidays">
+        <thead><tr>
+          <th data-i18n="th_emp">الموظف</th>
+          <th data-i18n="th_start_g">بداية (ميلادي)</th>
+          <th data-i18n="th_end_g">نهاية (ميلادي)</th>
+          <th data-i18n="th_start_h">بداية (هجري)</th>
+          <th data-i18n="th_end_h">نهاية (هجري)</th>
+          <th data-i18n="th_type">نوع</th>
+          <th data-i18n="th_reason">سبب</th>
+          <th data-i18n="th_attachments">مرفقات</th>
+          <th data-i18n="th_days">أيام</th>
+          <th data-i18n="th_updated_by">آخر تعديل بواسطة</th>
+          <th data-i18n="th_actions">إجراءات</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="small" data-i18n="hol_hint">اكتب الرقم/الاسم ثم اضغط Enter لتأكيد الاختيار وإظهار بطاقة الموظف، ثم أضف الإجازة.</p>
+    </section>
+  </main>
+
+  <main id="view-reports" class="view">
+    <h1 data-i18n="reports_title">التقارير</h1>
+    <section class="card">
+      <div class="filters">
+        <label class="ac-wrap"><span data-i18n="label_emp_optional">الموظف (اختياري)</span>
+          <input id="rEmpSearch" type="text" data-i18n-ph="ph_search_emp" placeholder="ابحث بالاسم أو الرقم الوظيفي">
+          <div id="rEmpList" class="ac-panel"></div>
+        </label>
+        <button id="btnClearRepEmp" data-i18n="btn_clear">مسح</button>
+        <button id="btnAllEmployees" data-i18n="btn_all_emps">تحديد كل الموظفين</button>
+        <label><span data-i18n="label_from">من</span> <input type="date" id="rStart"></label>
+        <label><span data-i18n="label_to">إلى</span> <input type="date" id="rEnd"></label>
+        <button id="btnRunReport" data-i18n="btn_apply">تطبيق</button>
+        <div class="spacer"></div>
+        <button id="btnPrint" data-i18n="btn_print">طباعة PDF</button>
+        <button id="btnExportXLS" data-i18n="btn_export_xls">تصدير Excel</button>
+      </div>
+      <div id="reportArea">
+        <h3 id="repTitle" data-i18n="h3_report_results">نتائج التقرير</h3>
+        <table id="tblReport">
+          <thead><tr>
+            <th data-i18n="th_code">الرقم الوظيفي</th>
+            <th data-i18n="th_emp_name">اسم الموظف</th>
+            <th data-i18n="th_city">المدينة</th>
+            <th data-i18n="th_dept">القسم</th>
+            <th data-i18n="th_start_g">بداية (ميلادي)</th>
+            <th data-i18n="th_end_g">نهاية (ميلادي)</th>
+            <th data-i18n="th_start_h">بداية (هجري)</th>
+            <th data-i18n="th_end_h">نهاية (هجري)</th>
+            <th data-i18n="th_duration_days">المدة (أيام)</th>
+            <th data-i18n="th_type">نوع</th>
+            <th data-i18n="th_reason">سبب</th>
+            <th data-i18n="th_entry_by">مدخل/معدِّل السجل</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="totals"><b data-i18n="totals_days">إجمالي الأيام:</b> <span id="repTotal">0</span></div>
+      </div>
+    </section>
+  </main>
+
+  <main id="view-activity" class="view">
+    <h1 data-i18n="activity_title">النشاط (سجل التعديلات)</h1>
+    <section class="card">
+      <div class="filters">
+        <label><span data-i18n="label_entity">الكيان</span>
+          <select id="aEntity">
+            <option value="" data-i18n="opt_all">الكل</option>
+            <option value="employee" data-i18n="opt_employees">الموظفون</option>
+            <option value="holiday" data-i18n="opt_holidays">الإجازات</option>
+          </select>
+        </label>
+        <label><span data-i18n="label_user">المستخدم (Username)</span> <input id="aUser" data-i18n-ph="ph_user_hint" placeholder="اتركه فارغًا للكل"></label>
+        <label><span data-i18n="label_from">من</span> <input type="date" id="aFrom"></label>
+        <label><span data-i18n="label_to">إلى</span> <input type="date" id="aTo"></label>
+        <button id="btnLoadAudit" data-i18n="btn_refresh">تحديث</button>
+        <div class="spacer"></div>
+      </div>
+      <table id="tblAudit">
+        <thead><tr>
+          <th data-i18n="th_time">الوقت</th>
+          <th data-i18n="th_user">المستخدم</th>
+          <th data-i18n="th_action">العملية</th>
+          <th data-i18n="th_entity">الكيان</th>
+          <th data-i18n="th_id">المعرف</th>
+          <th data-i18n="th_details">تفاصيل</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <main id="view-about" class="view">
+    <h1 data-i18n="about_title">عن التطبيق</h1>
+    <section class="card">
+      <p><b>Holidays calendar v3.7.2</b><br>Created by Ethar Saleh Alkawajah</p>
+      <p>Cloud database: Supabase (PostgreSQL + Auth + Storage + RLS) + Netlify. </p>
+    </section>
+  </main>
+
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-content">
+      <div class="drawer-header"><h2 id="drawerTitle">إضافة</h2><button id="closeDrawer" aria-label="Close">×</button></div>
+      <div class="drawer-body" id="drawerBody"></div>
+      <div class="drawer-footer">
+        <button id="btnSaveDrawer" data-i18n="drawer_save">حفظ</button>
+        <button id="btnCancelDrawer" data-i18n="drawer_cancel">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/script.js" type="module"></script>
+</body>
+</html>
